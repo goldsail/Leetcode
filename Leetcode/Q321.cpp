@@ -1,53 +1,44 @@
 class Solution {
 public:
     vector<int> maxNumber(vector<int>& nums1, vector<int>& nums2, int k) {
-        vector<char> result(k, '0');
-        vector<char> arr1, arr2;
-        for (int x : nums1) arr1.push_back('0' + x);
-        for (int x : nums2) arr2.push_back('0' + x);
-        //
-        auto dp1 = maxNumber(arr1, k);
-        auto dp2 = maxNumber(arr2, k);
+        vector<int> result(k, 0);
+        // Try every possible partition from 0, 1, 2, ..., k-2, k-1, k.
         for (int i = 0; i <= k; i++) {
-            if (i <= int(arr1.size()) && k - i <= int(arr2.size())) {
-                auto nums = maxNumber(
-                    dp1[arr1.size()][i], 
-                    dp2[arr2.size()][k - i]);
+            if (i <= int(nums1.size()) && k - i <= int(nums2.size())) {
+                auto sub1 = maxNumber(nums1, i);
+                auto sub2 = maxNumber(nums2, k - i);
+                auto nums = maxNumber(sub1, sub2);
                 if (cmpNumber(result, nums)) {
                     result = nums;
                 }
             }
         }
-        //
-        vector<int> ret;
-        for (char x : result) ret.push_back(x - '0');
-        return ret;
+        return result;
     }
     
 private:
-    vector<vector<vector<char>>> maxNumber(vector<char>& nums, int k) {
-        k = min(k, int(nums.size()));
-        auto dp = vector<vector<vector<char>>>(nums.size() + 1, 
-                                               vector<vector<char>>(k + 1));
-        for (int i = 0; i <= nums.size(); i++) 
-            dp[i][0] = vector<char>();
-        for (int i = 1; i <= k; i++) 
-            dp[i][i] = vector<char>(nums.begin(), nums.begin() + i);
-        for (int j = 1; j <= k; j++) {
-            for (int i = j + 1; i <= nums.size(); i++) {
-                vector<char> s1 = dp[i - 1][j];
-                vector<char> s2 = dp[i - 1][j - 1];
-                s2.push_back(nums[i - 1]);
-                dp[i][j] = cmpNumber(s1, s2) ? s2 : s1;
+    // Step 1: choose k digits from vector nums to form the largest number
+    // Using monotonic stack with one thing additional: 
+    // Stop popping elements when you've run out of k digits
+    vector<int> maxNumber(vector<int>& nums, int k) {
+        vector<int> stk;
+        int count = nums.size() - k;
+        for (int num : nums) {
+            while (!stk.empty() && stk.back() < num && count > 0) {
+                stk.pop_back();
+                count--;
             }
+            stk.push_back(num);
         }
-        return dp;
+        return vector<int>(stk.begin(), stk.begin() + k);
     }
     
-    vector<char> maxNumber(vector<char>& nums1, vector<char>& nums2) {
-        vector<char> result;
-        vector<char>::iterator it1 = nums1.begin();
-        vector<char>::iterator it2 = nums2.begin();
+    // Step 2: merge two vector into one largest number while keeping relative order
+    // Similar to a merge sort.
+    vector<int> maxNumber(vector<int>& nums1, vector<int>& nums2) {
+        vector<int> result;
+        vector<int>::iterator it1 = nums1.begin();
+        vector<int>::iterator it2 = nums2.begin();
         while (it1 != nums1.end() || it2 != nums2.end()) {
             if (it1 == nums1.end()) {
                 result.push_back(*it2);
@@ -71,7 +62,8 @@ private:
         return result;
     }
     
-    bool cmpNumber(const vector<char>& nums1, const vector<char>& nums2) {
+    // Lexicographical compare
+    bool cmpNumber(const vector<int>& nums1, const vector<int>& nums2) {
         return lexicographical_compare(
             nums1.begin(), nums1.end(), 
             nums2.begin(), nums2.end());
