@@ -1,48 +1,24 @@
-#include <string>
-#include <iostream>
-
-using namespace std;
-
-class Solution 
-{
+class Solution {
 public:
-	int numDecodings(string s) 
-	{
-		const char *str = s.c_str();
-		int len = s.size();
-		if (len > 0)
-		{
-			return _num(str, len);
-		}
-		else
-		{
-			return 0;
-		}
-	}
-
-	int _num(const char *str, int len)
-	{
-		if (len == 0)
-		{
-			return 1;
-		}
-		if (len == 1)
-		{
-			return (str[0] != '0');
-		}
-		//
-		int mid = len / 2;
-		int tmid = 10 * (str[mid - 1] - '0') + (str[mid] - '0');
-		int sub1 = _num(str, mid) * _num(str + mid, len - mid);
-		int sub2 = _num(str, mid - 1) * _num(str + mid + 1, len - mid - 1);
-		// cout << tmid << endl;
-		if (tmid >= 10 && tmid <= 26)
-		{
-			return sub1 + sub2;
-		}
-		else
-		{
-			return sub1;
-		}
-	}
+    int numDecodings(string s) {
+        if (s.empty() || s[0] == '0') return 0;
+        auto dp = vector<int>(s.size(), -1);
+        return help(s, 0, dp);
+    }
+    
+private:
+    int help(const string& s, int i, vector<int>& dp) {
+        if (i >= s.size()) return 1;
+        if (i == s.size() - 1) return (s[i] > '0');
+        if (dp[i] < 0) {
+            if (s[i] - '0' == 0) return 0;
+            int x = 10 * (s[i] - '0') + (s[i + 1] - '0');
+            if (x > 26) {
+                dp[i] = help(s, i + 1, dp);
+            } else {
+                dp[i] = help(s, i + 1, dp) + help(s, i + 2, dp);
+            }
+        }
+        return dp[i];
+    }
 };
